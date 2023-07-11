@@ -21,5 +21,64 @@ const fs = require('fs');
 const path = require('path');
 const app = express();
 
+const fileCache={};
+
+app.get('/files',(req,res)=>{
+  const direcyoryPath=path.join('02-nodejs','files');
+
+
+  fs.readdirSync(direcyoryPath,(err,files)=>{
+    if(err){
+      console.err('Errir reading directory',err);
+      return res.status(500).json({error:'internal server error'});
+
+    }
+
+    const fileName=files.filter(file=>fs.statSync(path.join(direcyoryPath,file)).isFile());
+
+
+    res.status(200).json(fileName);
+
+  });
+
+});
+
+
+app.get('/file/:a.txt',(req,res)=>{
+  const filename=req.params.folename;
+
+  const filePath=path.join('02-nodejs','files',filename);
+
+
+  if(fileCache[filename]){
+    return res.status(200).send(fileCache[filename]);
+
+
+  }
+
+  fs.readFile(filePath,'utf8',(err,data)=>{
+    if(err){
+      if(err.code==='EOENT'){
+        return res.status(404).send('File not found');
+
+      }
+      else{
+        console.error('Error reading file:',err);
+        return res.status(500).json({error:'Internal server error'});
+      }
+    }
+
+
+    fileCache[filename]=data;
+
+    res.status(200).send(data);
+  });
+});
+
+app.use((req, res) => {
+  res.status(404).json({ error: 'Not found' });
+});
+
+
 
 module.exports = app;

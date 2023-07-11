@@ -29,65 +29,87 @@
   Testing the server - run `npm run test-authenticationServer` command in terminal
  */
 
-const express = require("express")
-const PORT = 3000;
-const app = express();
-// write your logic here, DONT WRITE app.listen(3000) when you're running tests, the tests will automatically start the server
-app.use(bodyParser.json());
 
-const users=[];
+  const express=require('express');
+  const bodyParser=require('body-parser');
 
+  const app=express();
+  app.use(bodyParser.json());
 
+  const users=[];
 
-app.post('/signup', (req, res) => {
-  const { username, password, firstName, lastName } = req.body;
-
-
-  const existingUser = users.find(user => user.username === username);
-  if (existingUser) {
-    return res.status(400).json({ error: 'Username already exists' });
+  app.post('/signup', (req, res) => {
+    const { username, password, firstName, lastName } = req.body;
+  
+    // Check if the username already exists
+    if (users[username]) {
+      return res.status(400).json({ error: 'Username already exists' });
+    }
+  
+    // Generate a unique id for the new user
+    const id = generateUniqueId();
+  
+    // Save the user data in the object
+    users[username] = { id, username, password, firstName, lastName };
+  
+    res.status(201).json({ message: 'User created successfully' });
+  });
+  
+  // Login endpoint
+  app.post('/login', (req, res) => {
+    const { username, password } = req.body;
+  
+    // Find the user with the provided username
+    const user = users[username];
+  
+    // Check if the user exists and the password is correct
+    if (user && user.password === password) {
+      const { id, firstName, lastName } = user;
+      const authToken = generateAuthToken();
+  
+      res.status(200).json({ id, firstName, lastName, authToken });
+    } else {
+      res.status(401).json({ error: 'Invalid credentials' });
+    }
+  });
+  
+  // Data endpoint (Protected route)
+  app.get('/data', (req, res) => {
+    const { username, password } = req.headers;
+  
+    // Check if the username and password are provided
+    if (!username || !password) {
+      return res.status(401).json({ error: 'Missing credentials' });
+    }
+  
+    // Find the user with the provided username
+    const user = users[username];
+  
+    // Check if the user exists and the password is correct
+    if (user && user.password === password) {
+      const userData = Object.values(users).map(({ id, firstName, lastName }) => ({ id, firstName, lastName }));
+      res.status(200).json({ users: userData });
+    } else {
+      res.status(401).json({ error: 'Invalid credentials' });
+    }
+  });
+  
+  // Handle 404 - Not Found
+  app.use((req, res) => {
+    res.status(404).json({ error: 'Not found' });
+  });
+  
+  // Helper function to generate a unique id
+  function generateUniqueId() {
+    return Math.random().toString(36).substr(2, 9);
   }
-
-  const id=Date.now().toString();
-
-  const newUser={id,username,password,firstName,lastName};
-  users.push(newUser);
-
-  return res.status(201).json({message:'User created successfully'});
-});
-
-app.post("/login", (req, res) => {
- const {username,password}=req.body;
-
- const user=users.find(user=>user.username===username);
-
-
- if(user && user.password===password){
-  const {id,firstName,lastName}=user;
-  return res.status(200).json({id,firstName,lastName});
-
- }
-
- return res.status(401).json({error:'Invalid Credentials'});
-});
-
-app.get('/data',(req,res)=>{
-
-  const {username,password}=req.headers;
-
-
-  const user=users.find(user=>user.username==username && user.password===password);
-
-  if(!user){
-    return res.status(401).json({errir:'Invalid Credentials'});
+  
+  // Helper function to generate an authentication token
+  function generateAuthToken() {
+    return Math.random().toString(36).substr(2);
   }
-
-  const userDetails = users.map(({ id, firstName, lastName }) => ({ id, firstName, lastName }));
-  return res.status(200).json({ users: userDetails });
-});
-
-app.use((req,res)=>{
-  res.status(404).json({error:'Not Found'});
-
-});
-module.exports = app;
+  
+  // Start the server
+  app.listen(3000, () => {
+    console.log('Server started on port 3000');
+  });

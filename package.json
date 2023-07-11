@@ -1,0 +1,20 @@
+{
+  "name": "Week-2-Assignments",
+  "version": "1.0.0",
+  "description": "Each assignment has its respective instructions for the setup, running, testing and submitting it.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vtrixe/Week-2-Assignments.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/vtrixe/Week-2-Assignments/issues"
+  },
+  "homepage": "https://github.com/vtrixe/Week-2-Assignments#readme"
+}
