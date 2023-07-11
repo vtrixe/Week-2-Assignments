@@ -46,4 +46,99 @@ const app = express();
 
 app.use(bodyParser.json());
 
+let todos=[];
+
+
+function saveTodosToFile(){
+  FileSystem.writeFileSync('todo.json',JSON.stringify(todos));
+
+
+}
+
+function loadTodosFromFile(){
+  try{
+    const data=fs.readFileSync('todos.jsonn','utf8');
+
+    todos=JSON.parse(data);
+  }
+  catch(err){
+    todos=[];
+
+  }
+}
+
+loadTodosFromFile();
+
+
+app.get('/todos',(req,res)=>{
+  res.json(todos);
+});
+
+app.get('/todos/:id',(req,res)=>{
+  const id=req.params.id;
+  const todo=todos.find(todo=>todo.id===id);
+
+  if(todo){
+    res.json(todo);
+  }
+  else{
+    res.status(404).json({error:'Todo not found'});
+
+  }
+});
+
+app.post('/todos',(req,res)=>{
+  const{title,description}=req.body;
+  const id=uuidv4();
+
+  const todo={id,title,description};
+
+  todos.push(todo);
+
+  saveTodosToFile();
+
+  res.status(201).json({id});
+})
+app.put('/todos/:id',(req,res)=>{
+  const id=req.params.id;
+
+  const{title,description}=req.body;
+
+  const todoIndex=todos.findIndex(todod=>todo.id===id);
+
+  if(todoIndex!==-1){
+    todos[todoIndex].title=title||todos[todoIndex].title;
+    todos[todoIndex].description = description !== undefined ? description : todos[todoIndex].description;
+
+    saveTodosToFile();
+
+    res.sendStatus(200);
+
+
+  }
+  else{
+    res.status(404).json({error:'Todo not found'});
+  }
+});
+
+
+app.delete('todos/:id',(req,res)=>{
+  const id=req.params.id;
+  const todoIndex=todos.findIndex(todo=>todo.id===id);
+
+  if(todoIndex!==-1){
+    todos.splice(todoIndex,1);
+    saveTodosToFile();
+    res.sendStatus(200);
+
+  }
+  else{
+    res.status(404).json({error:'Todo not found'});
+  }
+});
+
+app.use((req, res) => {
+  res.status(404).json({ error: 'Not found' });
+});
+
 module.exports = app;
